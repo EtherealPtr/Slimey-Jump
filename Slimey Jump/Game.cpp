@@ -361,8 +361,14 @@ void Game::RenderGameOverScene()
 // -------------------
 void Game::RestartGame()
 {
+	dy = 0.023f;
+
+	m_NumOfPlatforms = 7;
 	m_Score = 0;
-	m_PlayerTransformation.GetPos().y = 0.41f;
+
+	m_PlayerTransformation.GetPos().x = 0.0f;
+	m_PlayerTransformation.GetPos().y = -0.30f;
+
 	m_plat[0].m_x = m_PlayerTransformation.GetPos().x;
 	m_plat[0].m_y = -0.40f;
 
