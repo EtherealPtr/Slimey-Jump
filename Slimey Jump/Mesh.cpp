@@ -5,11 +5,19 @@
 
 #include "Mesh.h"
 
+// -------------------
+// Author: Rony Hanna
+// Description: Destructor that deletes VAO 
+// -------------------
 Mesh::~Mesh()
 {
 	glDeleteVertexArrays(1, &m_VAO);
 }
 
+// -------------------
+// Author: Rony Hanna
+// Description: Function that sends position and color data to the GPU 
+// -------------------
 void Mesh::InitGeometry(CVertex_P* Vertices, unsigned int numOfVertices, unsigned int* indices, unsigned int numOfIndices)
 {
 	m_DrawCount = numOfIndices;
@@ -19,6 +27,7 @@ void Mesh::InitGeometry(CVertex_P* Vertices, unsigned int numOfVertices, unsigne
 
 	vector<vec3> position;
 	vector<vec3> colors;
+
 	position.reserve(numOfVertices);
 	colors.reserve(numOfVertices);
 
@@ -47,6 +56,10 @@ void Mesh::InitGeometry(CVertex_P* Vertices, unsigned int numOfVertices, unsigne
 	glBindVertexArray(0);
 }
 
+// -------------------
+// Author: Rony Hanna
+// Description: Function that sends position, color, and texture data to the GPU 
+// -------------------
 void Mesh::InitGeometry(CVertex_PT* Vertices, unsigned int numOfVertices, unsigned int* indices, unsigned int numOfIndices)
 {
 	m_DrawCount = numOfIndices;
@@ -94,6 +107,10 @@ void Mesh::InitGeometry(CVertex_PT* Vertices, unsigned int numOfVertices, unsign
 	glBindVertexArray(0);
 }
 
+// -------------------
+// Author: Rony Hanna
+// Description: Function that draws the mesh 
+// -------------------
 void Mesh::Draw()
 {
 	glBindVertexArray(m_VAO);

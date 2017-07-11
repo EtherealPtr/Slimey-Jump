@@ -13,8 +13,8 @@
 class Camera
 {
 public:
-	Camera() {};
-	~Camera() {};
+	Camera() { /* Do Nothing */ };
+	~Camera() { /* Do Nothing */ };
 
 	void initCamera(const glm::vec3& pos, float fov, float aspect, float zNear, float zFar)
 	{
@@ -26,7 +26,6 @@ public:
 
 	inline glm::mat4 GetProjectionMatrix() const { return m_Perspective; }
 	inline glm::mat4 ViewMatrix() const { return glm::lookAt(m_CameraPos, m_CameraPos + m_CameraViewDir, m_UpVector); }
-
 	inline glm::vec3& GetCameraPosition() { return m_CameraPos; };
 
 private:

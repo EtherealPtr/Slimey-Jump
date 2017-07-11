@@ -23,7 +23,7 @@
 using std::cout;
 using std::uniform_real_distribution;
 
-enum class State { PLAY, EXIT, TOTAL_STATES };
+enum class State { PLAY, GAME_OVER, EXIT, TOTAL_STATES };
 
 struct PlatformPos
 {
@@ -52,6 +52,8 @@ private:
 	void RenderBackground();
 	void RenderPlatforms();
 	void RenderPlayer();
+	void RenderGameOverScene();
+	void RestartGame();
 
 	void CapFrameRate(Uint32);
 
@@ -61,7 +63,7 @@ private:
 	Shapes shapes;
 	Shader m_SimpleShader;
 	Mesh m_Player, m_Background, m_Platform;
-	Texture m_texPlayer, m_texBackground, m_texPlatform;
+	Texture m_texPlayer, m_texBackground, m_texPlatform, m_texGameoverScene;
 	Camera m_Camera;
 	MatrixTransform m_PlayerTransformation, m_BackgroundTransformation, m_PlatformTransformation;
 	PlatformPos m_plat[16];
@@ -81,6 +83,7 @@ private:
 	bool m_isAudioActive = true;
 	bool m_isMovingRight = false;
 	bool m_isMovingLeft = false;
+	bool m_isGameover = false;
 
 	bool m_AlternateScreenMode = false;
 };

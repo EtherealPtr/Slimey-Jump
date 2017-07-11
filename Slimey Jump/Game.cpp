@@ -79,7 +79,7 @@ void Game::GameLoop()
 		UpdateGameComponents();
 		ProcessInput();
 		Render();
-
+		
 		CapFrameRate(m_StartingTick);
 	}
 }
@@ -145,8 +145,15 @@ void Game::ProcessInput()
 					SDL_SetWindowFullscreen(m_MainWindow, 0);
 					SDL_ShowCursor(SDL_ENABLE);
 				}
+				break;
 			}
-			break;
+
+			// Check if the game is over and if the 'R' key was pressed 
+			if (_event.key.keysym.sym == SDLK_r && m_isGameover)
+			{
+				RestartGame();
+				break;
+			}
 		}
 	}
 }
@@ -159,11 +166,16 @@ void Game::Render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	RenderBackground();
-	RenderPlatforms();
-	RenderPlayer();
-	m_Text->Render();
-
+	if (!m_isGameover)
+	{
+		RenderBackground();
+		RenderPlatforms();
+		RenderPlayer();
+		m_Text->Render();
+	}
+	else
+		RenderGameOverScene();
+	
 	SDL_GL_SwapWindow(m_MainWindow);
 }
 
@@ -173,64 +185,70 @@ void Game::Render()
 // -------------------
 void Game::UpdateGameComponents()
 {
-	dy -= 0.0005f;
-	m_PlayerTransformation.GetPos().y += dy;
-
-	if (m_PlayerTransformation.GetPos().y < -0.41f) 
+	if (!m_isGameover)
 	{
-		// Game over
-	}
+		dy -= 0.0005f;
+		m_PlayerTransformation.GetPos().y += dy;
 
-	if (m_PlayerTransformation.GetPos().y > 0.2f)
-	{
-		for (unsigned int i = 0; i < m_NumOfPlatforms; ++i)
+		// Check if player has fallen 
+		if (m_PlayerTransformation.GetPos().y < -0.41f)
 		{
-			m_PlayerTransformation.GetPos().y = 0.2f;
-			m_plat[i].m_y = m_plat[i].m_y - dy;
+			// Game over
+			GameState = State::GAME_OVER;
+			m_isGameover = true;
+		}
 
-			if (m_plat[i].m_y < -0.5f)
-			{		
-				m_Score += 55;
-				m_plat[i].m_y = 0.48f;
-				uniform_real_distribution<float> randomPosX(-0.6f, 0.4f);
-				m_plat[i].m_x = randomPosX(RandomNumberGenerator);
+		if (m_PlayerTransformation.GetPos().y > 0.2f)
+		{
+			for (unsigned int i = 0; i < m_NumOfPlatforms; ++i)
+			{
+				m_PlayerTransformation.GetPos().y = 0.2f;
+				m_plat[i].m_y = m_plat[i].m_y - dy;
 
-				if (m_Score > 3000 && m_Score < 4000)
-					m_NumOfPlatforms = 7;
-				else if (m_Score > 4000 && m_Score < 6000)
-					m_NumOfPlatforms = 6;
-				else if (m_Score > 6000 && m_Score < 8000)
-					m_NumOfPlatforms = 5;
-				else if (m_Score > 8000)
-					m_NumOfPlatforms = 4;
+				if (m_plat[i].m_y < -0.5f)
+				{
+					m_Score += 55;
+					m_plat[i].m_y = 0.48f;
+					uniform_real_distribution<float> randomPosX(-0.6f, 0.4f);
+					m_plat[i].m_x = randomPosX(RandomNumberGenerator);
+
+					if (m_Score > 3000 && m_Score < 4000)
+						m_NumOfPlatforms = 7;
+					else if (m_Score > 4000 && m_Score < 6000)
+						m_NumOfPlatforms = 6;
+					else if (m_Score > 6000 && m_Score < 8000)
+						m_NumOfPlatforms = 5;
+					else if (m_Score > 8000)
+						m_NumOfPlatforms = 4;
+				}
 			}
 		}
-	}
 
-	for (unsigned int i = 0; i < m_NumOfPlatforms; ++i)
-	{
-		if ((m_PlayerTransformation.GetPos().x + 0.2f > m_plat[i].m_x) &&
-			(m_PlayerTransformation.GetPos().x < m_plat[i].m_x + 0.2f) &&
-			(m_PlayerTransformation.GetPos().y > m_plat[i].m_y + 0.06f) &&
-			(m_PlayerTransformation.GetPos().y + 0.06f < m_plat[i].m_y + 0.15f) &&
-			(dy < 0))
+		for (unsigned int i = 0; i < m_NumOfPlatforms; ++i)
 		{
-			if (m_isAudioActive)
-				m_AudioManager->playSound(m_JumpSound, 0, false, &m_FmodChannel);
+			if ((m_PlayerTransformation.GetPos().x + 0.2f > m_plat[i].m_x) &&
+				(m_PlayerTransformation.GetPos().x < m_plat[i].m_x + 0.2f) &&
+				(m_PlayerTransformation.GetPos().y > m_plat[i].m_y + 0.06f) &&
+				(m_PlayerTransformation.GetPos().y + 0.06f < m_plat[i].m_y + 0.15f) &&
+				(dy < 0))
+			{
+				if (m_isAudioActive)
+					m_AudioManager->playSound(m_JumpSound, 0, false, &m_FmodChannel);
 
-			dy = 0.023f;
-			m_plat[i].m_x = 2.0f;
+				dy = 0.023f;
+				m_plat[i].m_x = 2.0f;
+			}
 		}
+
+		if (m_isMovingRight)
+			m_PlayerTransformation.GetPos().x += m_playerVelocity;
+
+		if (m_isMovingLeft)
+			m_PlayerTransformation.GetPos().x -= m_playerVelocity;
+
+		std::string score = "Score " + ToString(m_Score);
+		m_Text->SetText(score);
 	}
-
-	if (m_isMovingRight)
-		m_PlayerTransformation.GetPos().x += m_playerVelocity;
-
-	if (m_isMovingLeft)
-		m_PlayerTransformation.GetPos().x -= m_playerVelocity;
-
-	std::string score = "Score " + ToString(m_Score);
-	m_Text->SetText(score);
 }
 
 // -------------------
@@ -326,6 +344,41 @@ bool Game::LoadAudio()
 
 // -------------------
 // Author: Rony Hanna
+// Description: Function that renders the game over scene 
+// -------------------
+void Game::RenderGameOverScene()
+{
+	m_BackgroundTransformation.GetPos().x = -0.85f;
+	m_SimpleShader.UseProgram();
+	m_SimpleShader.UpdateTransform(m_BackgroundTransformation, m_Camera);
+	m_texGameoverScene.BindTexture(0);
+	m_Background.Draw();
+}
+
+// -------------------
+// Author: Rony Hanna
+// Description: Function that restarts necessary game components 
+// -------------------
+void Game::RestartGame()
+{
+	m_Score = 0;
+	m_PlayerTransformation.GetPos().y = 0.41f;
+	m_plat[0].m_x = m_PlayerTransformation.GetPos().x;
+	m_plat[0].m_y = -0.40f;
+
+	for (unsigned int i = 1; i < m_NumOfPlatforms; ++i)
+	{
+		uniform_real_distribution<float> randomPosX(-0.6f, 0.5f);
+		uniform_real_distribution<float> randomPosY(-0.5f, 0.4f);
+		m_plat[i].m_x = randomPosX(RandomNumberGenerator);
+		m_plat[i].m_y = randomPosY(RandomNumberGenerator);
+	}
+
+	m_isGameover = false;
+}
+
+// -------------------
+// Author: Rony Hanna
 // Description: Starting point function that initializes necessary game components and begins the game loop
 // -------------------
 void Game::Run()
@@ -336,6 +389,7 @@ void Game::Run()
 	m_texPlayer.InitTexture("Assets//Textures//Slime.png");
 	m_texBackground.InitTexture("Assets//Textures//Background.png");
 	m_texPlatform.InitTexture("Assets//Textures//grass.png");
+	m_texGameoverScene.InitTexture("Assets//Textures//Gameover.png");
 
 	shapes.CreateTexturedQuad();
 	m_Player.InitGeometry(shapes.m_TexturedQuad, sizeof(shapes.m_TexturedQuad) / sizeof(shapes.m_TexturedQuad[0]), QuadIndices, sizeof(QuadIndices) / sizeof(QuadIndices[0]));

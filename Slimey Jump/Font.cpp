@@ -142,17 +142,20 @@ void Text::Render()
 			{ xpos + w, ypos, 1.0, 1.0 },
 			{ xpos + w, ypos + h, 1.0, 0.0 }
 		};
+
 		// Render glyph texture over quad
 		glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+
 		// Update content of VBO memory
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); 
 
+		// Render quad 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		// Render quad
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-		// Advance cursors for next glyph (note that advance is number of 1/64 pixels)
-		textPos.x += (ch.Advance >> 6) * this->m_Scale; // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
+
+		// Advance cursors for next glyph 
+		textPos.x += (ch.Advance >> 6) * this->m_Scale;
 	}
 
 	glBindVertexArray(0);

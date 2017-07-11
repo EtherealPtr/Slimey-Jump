@@ -5,14 +5,13 @@
 
 #include "Shapes.h"
 
-Shapes::Shapes()
-{
-}
+Shapes::Shapes() { /* Do Nothing */ }
+Shapes::~Shapes() { /* Do Nothing */ }
 
-Shapes::~Shapes()
-{
-}
-
+// -------------------
+// Author: Rony Hanna
+// Description: Function that creates a triangle 
+// -------------------
 void Shapes::CreateTriangle()
 {
 	m_TriangleVertices[0].position = { 0.0f, 0.5f, 0.0f };
@@ -24,6 +23,10 @@ void Shapes::CreateTriangle()
 	m_TriangleVertices[2].colors = { 1.0f, 0.0f, 1.0f };
 }
 
+// -------------------
+// Author: Rony Hanna
+// Description: Function that creates a triangle with texture coordinates 
+// -------------------
 void Shapes::CreateTexturedTriangle()
 {
 	m_TexturedTriangleVertices[0].position = { 0.0f, 0.5f, 0.0f };
@@ -39,6 +42,10 @@ void Shapes::CreateTexturedTriangle()
 	m_TexturedTriangleVertices[2].texture = { 0.0f, 0.0f };
 }
 
+// -------------------
+// Author: Rony Hanna
+// Description: Function that creates a quad with texture coordinates 
+// -------------------
 void Shapes::CreateTexturedQuad()
 {
 	m_TexturedQuad[0].position = { 0.0f, 0.1f, 0.0f };

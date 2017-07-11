@@ -9,11 +9,19 @@
 
 Texture::Texture() { /* Do Nothing */ }
 
+// -------------------
+// Author: Rony Hanna
+// Description: Destructor that frees memory 
+// -------------------
 Texture::~Texture()
 {
 	glDeleteTextures(1, &m_Texture);
 }
 
+// -------------------
+// Author: Rony Hanna
+// Description: Function that loads texture images
+// -------------------
 void Texture::InitTexture(const std::string& path)
 {
 	unsigned char* pTextureImage = SOIL_load_image(path.c_str(), &m_Width, &m_Height, 0, SOIL_LOAD_RGBA);
@@ -37,6 +45,10 @@ void Texture::InitTexture(const std::string& path)
 	SOIL_free_image_data(pTextureImage);
 }
 
+// -------------------
+// Author: Rony Hanna
+// Description: Function that activate texture 
+// -------------------
 void Texture::BindTexture(unsigned int unit)
 {
 	assert(unit >= 0 && unit <= 31);
