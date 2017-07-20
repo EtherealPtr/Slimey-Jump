@@ -25,7 +25,7 @@ different objects the player can acquire during the game (such as propeller hats
 
 You may play the game by navigating to the debug folder and double clicking the Slimey Jump.exe file.  
 If you would rather run the game using VS then simply run the .sln file instead.   
-If the project failed to load, please follow these simple steps below:  
+If the project failed to load (it shouldn't fail but just in case it did), please follow these simple steps below:  
  - Select the project in __Solution Explorer__
  - In __Properties Window__, click on the path and a browse button (__...__) will appear on the right
  - Click the browse button and locate project file __.vcsproj__ which is contained in the Slimey Jump folder and click open
