@@ -26,4 +26,4 @@ different objects the player can acquire during the game (such as propeller hats
 You may play the game by navigating to the debug folder and double clicking the Slimey Jump.exe file.  
 If you would rather run the game using VS then simply run the .sln file instead.   
  
-Created by Rony Hanna on 10th of July, 2017.
+Created by Rony Hanna July 10, 2017.
