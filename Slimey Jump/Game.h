@@ -52,8 +52,12 @@ private:
 	void RenderBackground();
 	void RenderPlatforms();
 	void RenderPlayer();
+	void RenderEnemy();
+	void RenderProjectile();
 	void RenderGameOverScene();
 	void RestartGame();
+	void UpdatePlatforms();
+	void UpdateEnemySpawnRate();
 
 	void CapFrameRate(Uint32);
 
@@ -62,10 +66,10 @@ private:
 
 	Shapes shapes;
 	Shader m_SimpleShader;
-	Mesh m_Player, m_Background, m_Platform;
-	Texture m_texPlayer, m_texBackground, m_texPlatform, m_texGameoverScene;
+	Mesh m_Player, m_enemy, m_projectile, m_Background, m_Platform;
+	Texture m_texPlayer, m_texEnemy, m_texProjectile, m_texBackground, m_texPlatform, m_texGameoverScene;
 	Camera m_Camera;
-	MatrixTransform m_PlayerTransformation, m_BackgroundTransformation, m_PlatformTransformation;
+	MatrixTransform m_PlayerTransformation, m_enemyTransformation, m_projectileTransformation, m_BackgroundTransformation, m_PlatformTransformation;
 	PlatformPos m_plat[16];
 	Text* m_Text = nullptr;
 
@@ -84,7 +88,8 @@ private:
 	bool m_isMovingRight = false;
 	bool m_isMovingLeft = false;
 	bool m_isGameover = false;
-
+	bool m_bEnemyChangeDir = false;
+	bool m_bShooting = false;
 	bool m_AlternateScreenMode = false;
 };
 

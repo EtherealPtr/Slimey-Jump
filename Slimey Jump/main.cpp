@@ -7,7 +7,7 @@
 
 int main(int argc, char** argv)
 {
-	Game FearlessHobbitEngine;
-	FearlessHobbitEngine.Run();
+	Game SlimeyJump;
+	SlimeyJump.Run();
 	return 0;
 }

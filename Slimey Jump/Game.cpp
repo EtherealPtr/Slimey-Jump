@@ -10,12 +10,20 @@
 
 std::mt19937 RandomNumberGenerator(time(NULL));
 
+// -------------------
+// Author: Rony Hanna
+// Description: Constructor that initializes the game's state
+// -------------------
 Game::Game()
 {
 	m_StartingTick = 0;
 	GameState = State::PLAY;
 }
 
+// -------------------
+// Author: Rony Hanna
+// Description: Destructor that deallocates allocated memory on the heap (or freestore)
+// -------------------
 Game::~Game()
 {
 	delete m_Text;
@@ -100,11 +108,6 @@ void Game::ProcessInput()
 			GameState = State::EXIT;
 			break;
 
-		case SDL_MOUSEMOTION:
-			//std::cout << "X: " << _event.motion.x << "\n";
-			//std::cout << "Y: " << _event.motion.y << "\n";
-			break;
-
 		case SDL_KEYDOWN:
 			m_playerVelocity = 0.012;
 
@@ -131,6 +134,15 @@ void Game::ProcessInput()
 			{
 				GameState = State::EXIT;
 				break;
+			}
+			if (_event.key.keysym.sym == SDLK_SPACE)
+			{
+				if (!m_bShooting)
+				{
+					m_projectileTransformation.GetPos().x = m_PlayerTransformation.GetPos().x + 0.04f;
+					m_projectileTransformation.GetPos().y = m_PlayerTransformation.GetPos().y;
+					m_bShooting = true;
+				}
 			}
 			if (_event.key.keysym.sym == SDLK_h)
 			{
@@ -160,7 +172,7 @@ void Game::ProcessInput()
 
 // -------------------
 // Author: Rony Hanna
-// Description: Function that renders out the game components 
+// Description: Function that renders the game components 
 // -------------------
 void Game::Render()
 {
@@ -171,6 +183,12 @@ void Game::Render()
 		RenderBackground();
 		RenderPlatforms();
 		RenderPlayer();
+		RenderEnemy();
+
+		// Check if the player is shooting, if so render the projectile 
+		if (m_bShooting)
+			RenderProjectile();
+
 		m_Text->Render();
 	}
 	else
@@ -190,6 +208,55 @@ void Game::UpdateGameComponents()
 		dy -= 0.0005f;
 		m_PlayerTransformation.GetPos().y += dy;
 
+#pragma region ENEMY_MOVEMENT_AND_COLLISION
+		{
+			// Update enemy direction
+			if (m_enemyTransformation.GetPos().x < -0.6f)
+				m_bEnemyChangeDir = true;
+			else if (m_enemyTransformation.GetPos().x > 0.4f)
+				m_bEnemyChangeDir = false;
+
+			// Update enemy movement 
+			if (m_bEnemyChangeDir)
+				m_enemyTransformation.GetPos().x += 0.007f; // Enemy moves right 
+			else
+				m_enemyTransformation.GetPos().x -= 0.007f; // Enemy moves left 
+
+			// Check for collision between player and enemy 
+			if (m_PlayerTransformation.GetPos().x + 0.15f > m_enemyTransformation.GetPos().x &&
+				m_PlayerTransformation.GetPos().x < m_enemyTransformation.GetPos().x + 0.15f &&
+				m_PlayerTransformation.GetPos().y + 0.06f > m_enemyTransformation.GetPos().y &&
+				m_PlayerTransformation.GetPos().y < m_enemyTransformation.GetPos().y + 0.06f)
+			{
+				GameState = State::GAME_OVER;
+				m_isGameover = true;
+			}
+
+			// Check for collision between player's projectile and enemy 
+			if (m_projectileTransformation.GetPos().x + 0.15f > m_enemyTransformation.GetPos().x &&
+				m_projectileTransformation.GetPos().x < m_enemyTransformation.GetPos().x + 0.15f &&
+				m_projectileTransformation.GetPos().y + 0.06f > m_enemyTransformation.GetPos().y &&
+				m_projectileTransformation.GetPos().y < m_enemyTransformation.GetPos().y + 0.06f)
+			{
+				// Award some points and determine when the enemy should appear again based on player's current score 
+				m_Score += 350;
+				UpdateEnemySpawnRate();
+			}
+		}
+#pragma endregion // ENEMY_MOVEMENT_AND_COLLISION
+
+		// Update projectile if the player is shooting 
+		if (m_bShooting)
+		{
+			m_projectileTransformation.GetPos().y += 0.03f;
+
+			if (m_projectileTransformation.GetPos().y > 1.5f)
+			{
+				m_projectileTransformation.GetPos().x = 10;
+				m_bShooting = false;
+			}
+		}
+
 		// Check if player has fallen 
 		if (m_PlayerTransformation.GetPos().y < -0.41f)
 		{
@@ -200,32 +267,49 @@ void Game::UpdateGameComponents()
 
 		if (m_PlayerTransformation.GetPos().y > 0.2f)
 		{
+			// Reduce the total amount of platforms based on the player's current score to make it slightly more challenging 
+			UpdatePlatforms();
+
+			m_enemyTransformation.GetPos().y -= dy;
+			if (m_enemyTransformation.GetPos().y < -0.5f)
+			{
+				UpdateEnemySpawnRate();
+			}
+
 			for (unsigned int i = 0; i < m_NumOfPlatforms; ++i)
 			{
 				m_PlayerTransformation.GetPos().y = 0.2f;
-				m_plat[i].m_y = m_plat[i].m_y - dy;
+				m_plat[i].m_y -= dy;
 
 				if (m_plat[i].m_y < -0.5f)
 				{
 					m_Score += 55;
 					m_plat[i].m_y = 0.48f;
-					uniform_real_distribution<float> randomPosX(-0.6f, 0.4f);
+					uniform_real_distribution<float> randomPosX(-0.6f, 0.3f);
 					m_plat[i].m_x = randomPosX(RandomNumberGenerator);
 
-					if (m_Score > 3000 && m_Score < 4000)
-						m_NumOfPlatforms = 7;
-					else if (m_Score > 4000 && m_Score < 6000)
-						m_NumOfPlatforms = 6;
-					else if (m_Score > 6000 && m_Score < 8000)
-						m_NumOfPlatforms = 5;
-					else if (m_Score > 8000)
-						m_NumOfPlatforms = 4;
+					if (i > 0)
+					{
+						for (unsigned int j = i - 1; j > 0; --j)
+						{
+							if ((m_plat[i].m_x + 0.1f > m_plat[j].m_x) &&
+								(m_plat[i].m_x < m_plat[j].m_x + 0.1f) &&
+								(m_plat[i].m_y + 0.2f > m_plat[j].m_y) &&
+								(m_plat[i].m_y < m_plat[j].m_y + 0.2f))
+							{
+								m_plat[i].m_x = randomPosX(RandomNumberGenerator);
+								m_plat[i].m_y = 0.48f;
+								j += 1;
+							}
+						}
+					}
 				}
 			}
 		}
 
 		for (unsigned int i = 0; i < m_NumOfPlatforms; ++i)
 		{
+			// Check for collision between player and platform
 			if ((m_PlayerTransformation.GetPos().x + 0.2f > m_plat[i].m_x) &&
 				(m_PlayerTransformation.GetPos().x < m_plat[i].m_x + 0.2f) &&
 				(m_PlayerTransformation.GetPos().y > m_plat[i].m_y + 0.06f) &&
@@ -240,12 +324,14 @@ void Game::UpdateGameComponents()
 			}
 		}
 
+		// Update player movement 
 		if (m_isMovingRight)
 			m_PlayerTransformation.GetPos().x += m_playerVelocity;
 
 		if (m_isMovingLeft)
 			m_PlayerTransformation.GetPos().x -= m_playerVelocity;
 
+		// Update score 
 		std::string score = "Score " + ToString(m_Score);
 		m_Text->SetText(score);
 	}
@@ -302,6 +388,34 @@ void Game::RenderPlayer()
 
 // -------------------
 // Author: Rony Hanna
+// Description: Function that renders en enemy 
+// -------------------
+void Game::RenderEnemy()
+{
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	m_SimpleShader.UpdateTransform(m_enemyTransformation, m_Camera);
+	m_texEnemy.BindTexture(0);
+	m_enemy.Draw();
+	glDisable(GL_BLEND);
+}
+
+// -------------------
+// Author: Rony Hanna
+// Description: Function that renders a projectile  
+// -------------------
+void Game::RenderProjectile()
+{
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	m_SimpleShader.UpdateTransform(m_projectileTransformation, m_Camera);
+	m_texProjectile.BindTexture(0);
+	m_projectile.Draw();
+	glDisable(GL_BLEND);
+}
+
+// -------------------
+// Author: Rony Hanna
 // Description: Function that caps the frame rate to a certain game speed 
 // -------------------
 void Game::CapFrameRate(Uint32 StartingTick)
@@ -313,7 +427,7 @@ void Game::CapFrameRate(Uint32 StartingTick)
 
 // -------------------
 // Author: Rony Hanna
-// Description: Function that initializes FMOD library 
+// Description: Function that initializes the FMOD sound effects library  
 // -------------------
 bool Game::InitFmod()
 {
@@ -333,7 +447,7 @@ bool Game::InitFmod()
 
 // -------------------
 // Author: Rony Hanna
-// Description: Function that loads audio 
+// Description: Function that loads audio  
 // -------------------
 bool Game::LoadAudio()
 {
@@ -374,13 +488,48 @@ void Game::RestartGame()
 
 	for (unsigned int i = 1; i < m_NumOfPlatforms; ++i)
 	{
-		uniform_real_distribution<float> randomPosX(-0.6f, 0.5f);
+		uniform_real_distribution<float> randomPosX(-0.6f, 0.3f);
 		uniform_real_distribution<float> randomPosY(-0.5f, 0.4f);
 		m_plat[i].m_x = randomPosX(RandomNumberGenerator);
 		m_plat[i].m_y = randomPosY(RandomNumberGenerator);
 	}
 
 	m_isGameover = false;
+}
+
+
+// -------------------
+// Author: Rony Hanna
+// Description: Function that checks the player's current score and adjust the numbers of platforms  
+// -------------------
+void Game::UpdatePlatforms()
+{
+	if (m_Score > 3000 && m_Score < 4000)
+		m_NumOfPlatforms = 7;
+	else if (m_Score > 4000 && m_Score < 6000)
+		m_NumOfPlatforms = 6;
+	else if (m_Score > 6000 && m_Score < 8000)
+		m_NumOfPlatforms = 5;
+	else if (m_Score > 8000)
+		m_NumOfPlatforms = 4;
+}
+
+// -------------------
+// Author: Rony Hanna
+// Description: Function that checks the player's current score and adjust the enemy's reappearance rate based on the player's current score 
+// -------------------
+void Game::UpdateEnemySpawnRate()
+{
+	if (m_Score > 3000 && m_Score < 4000)
+		m_enemyTransformation.GetPos().y += 10.0f;
+	else if (m_Score > 4000 && m_Score < 6000)
+		m_enemyTransformation.GetPos().y += 7.0f;
+	else if (m_Score > 6000 && m_Score < 8000)
+		m_enemyTransformation.GetPos().y += 5.0f;
+	else if (m_Score > 8000)
+		m_enemyTransformation.GetPos().y += 3.0f;
+	else
+		m_enemyTransformation.GetPos().y += 12.0f;
 }
 
 // -------------------
@@ -393,16 +542,25 @@ void Game::Run()
 
 	m_SimpleShader.SetProgram(m_SimpleShader.CreateProgram("Assets/Shaders/VertexShader.vs", "Assets/Shaders/FragmentShader.fs"));
 	m_texPlayer.InitTexture("Assets//Textures//Slime.png");
+	m_texEnemy.InitTexture("Assets//Textures//EnemySlime.png");
+	m_texProjectile.InitTexture("Assets//Textures//Projectile.png");
 	m_texBackground.InitTexture("Assets//Textures//Background.png");
 	m_texPlatform.InitTexture("Assets//Textures//grass.png");
 	m_texGameoverScene.InitTexture("Assets//Textures//Gameover.png");
 
 	shapes.CreateTexturedQuad();
 	m_Player.InitGeometry(shapes.m_TexturedQuad, sizeof(shapes.m_TexturedQuad) / sizeof(shapes.m_TexturedQuad[0]), QuadIndices, sizeof(QuadIndices) / sizeof(QuadIndices[0]));
+	m_enemy.InitGeometry(shapes.m_TexturedQuad, sizeof(shapes.m_TexturedQuad) / sizeof(shapes.m_TexturedQuad[0]), QuadIndices, sizeof(QuadIndices) / sizeof(QuadIndices[0]));
+	m_projectile.InitGeometry(shapes.m_TexturedQuad, sizeof(shapes.m_TexturedQuad) / sizeof(shapes.m_TexturedQuad[0]), QuadIndices, sizeof(QuadIndices) / sizeof(QuadIndices[0]));
 	m_Background.InitGeometry(shapes.m_TexturedQuad, sizeof(shapes.m_TexturedQuad) / sizeof(shapes.m_TexturedQuad[0]), QuadIndices, sizeof(QuadIndices) / sizeof(QuadIndices[0]));
 	m_Platform.InitGeometry(shapes.m_TexturedQuad, sizeof(shapes.m_TexturedQuad) / sizeof(shapes.m_TexturedQuad[0]), QuadIndices, sizeof(QuadIndices) / sizeof(QuadIndices[0]));
 
 	m_PlayerTransformation.GetPos().y = 0.41f;
+	m_enemyTransformation.GetPos().y = 0.70f;
+
+	m_projectileTransformation.GetPos().x = 100.0f;
+	m_projectileTransformation.GetScale().x = 0.5f;
+	m_projectileTransformation.GetScale().y = 0.5f;
 
 	m_PlatformTransformation.GetPos().x = 0.0f;
 	m_PlatformTransformation.GetScale().x = 1.2f;
@@ -416,7 +574,7 @@ void Game::Run()
 
 	for (unsigned int i = 0; i < m_NumOfPlatforms; ++i)
 	{
-		uniform_real_distribution<float> randomPosX(-0.6f, 0.5f);
+		uniform_real_distribution<float> randomPosX(-0.6f, 0.3f);
 		uniform_real_distribution<float> randomPosY(-0.5f, 0.4f);
 		m_plat[i].m_x = randomPosX(RandomNumberGenerator);
 		m_plat[i].m_y = randomPosY(RandomNumberGenerator);
