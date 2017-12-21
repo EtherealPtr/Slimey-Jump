@@ -12,22 +12,29 @@ std::mt19937 RandomNumberGenerator(time(NULL));
 
 // -------------------
 // Author: Rony Hanna
-// Description: Constructor that initializes the game's state
+// Description: Constructor that initializes certain game components (enemy's speed, delta time, and game state) 
 // -------------------
 Game::Game()
 {
+	m_enemySpeed = 0.007f;
 	m_StartingTick = 0;
 	GameState = State::PLAY;
 }
 
 // -------------------
 // Author: Rony Hanna
-// Description: Destructor that deallocates allocated memory on the heap (or freestore)
+// Description: Destructor that deallocates allocated memory on the heap (or freestore) and deletes objects 
 // -------------------
 Game::~Game()
 {
 	delete m_Text;
 	m_Text = nullptr;
+
+	m_mainThemeOne->release();
+	m_quake->release();
+	m_JumpSound->release();
+	m_winterTheme->release();
+	m_AudioManager->release();
 }
 
 // -------------------
@@ -135,7 +142,7 @@ void Game::ProcessInput()
 				GameState = State::EXIT;
 				break;
 			}
-			if (_event.key.keysym.sym == SDLK_SPACE)
+			if (_event.key.keysym.sym == SDLK_w)
 			{
 				if (!m_bShooting)
 				{
@@ -216,11 +223,15 @@ void Game::UpdateGameComponents()
 			else if (m_enemyTransformation.GetPos().x > 0.4f)
 				m_bEnemyChangeDir = false;
 
+			// Increase enemy's speed if player's current score is above 5000 to make things a bit more challenging 
+			if (m_Score > 5000)
+				m_enemySpeed = 0.01f;
+
 			// Update enemy movement 
 			if (m_bEnemyChangeDir)
-				m_enemyTransformation.GetPos().x += 0.007f; // Enemy moves right 
+				m_enemyTransformation.GetPos().x += m_enemySpeed; // Enemy moves right 
 			else
-				m_enemyTransformation.GetPos().x -= 0.007f; // Enemy moves left 
+				m_enemyTransformation.GetPos().x -= m_enemySpeed; // Enemy moves left 
 
 			// Check for collision between player and enemy 
 			if (m_PlayerTransformation.GetPos().x + 0.15f > m_enemyTransformation.GetPos().x &&
@@ -233,8 +244,8 @@ void Game::UpdateGameComponents()
 			}
 
 			// Check for collision between player's projectile and enemy 
-			if (m_projectileTransformation.GetPos().x + 0.15f > m_enemyTransformation.GetPos().x &&
-				m_projectileTransformation.GetPos().x < m_enemyTransformation.GetPos().x + 0.15f &&
+			if (m_projectileTransformation.GetPos().x + 0.05f > m_enemyTransformation.GetPos().x &&
+				m_projectileTransformation.GetPos().x < m_enemyTransformation.GetPos().x + 0.05f &&
 				m_projectileTransformation.GetPos().y + 0.06f > m_enemyTransformation.GetPos().y &&
 				m_projectileTransformation.GetPos().y < m_enemyTransformation.GetPos().y + 0.06f)
 			{
@@ -250,10 +261,23 @@ void Game::UpdateGameComponents()
 		{
 			m_projectileTransformation.GetPos().y += 0.03f;
 
-			if (m_projectileTransformation.GetPos().y > 1.5f)
+			if (m_projectileTransformation.GetPos().y > 1.2f)
 			{
 				m_projectileTransformation.GetPos().x = 10;
 				m_bShooting = false;
+			}
+		}
+
+		// Update music
+		if (m_Score >= 5900)
+		{
+			if (!m_bDoOnce[1])
+			{
+				m_bDoOnce[1] = true;
+				m_AudioManager->playSound(m_winterTheme, 0, false, &m_FmodChannel);
+				m_winterTheme->setMode(FMOD_LOOP_NORMAL);
+				m_winterTheme->setLoopCount(20);
+				m_FmodChannel->setVolume(0.07f);
 			}
 		}
 
@@ -267,14 +291,10 @@ void Game::UpdateGameComponents()
 
 		if (m_PlayerTransformation.GetPos().y > 0.2f)
 		{
-			// Reduce the total amount of platforms based on the player's current score to make it slightly more challenging 
-			UpdatePlatforms();
-
+			// Update enemy's spawn rate based on the player's current score 
 			m_enemyTransformation.GetPos().y -= dy;
 			if (m_enemyTransformation.GetPos().y < -0.5f)
-			{
 				UpdateEnemySpawnRate();
-			}
 
 			for (unsigned int i = 0; i < m_NumOfPlatforms; ++i)
 			{
@@ -283,8 +303,12 @@ void Game::UpdateGameComponents()
 
 				if (m_plat[i].m_y < -0.5f)
 				{
-					m_Score += 55;
-					m_plat[i].m_y = 0.48f;
+					m_Score += 60;
+					m_plat[i].m_y = 0.47f;
+
+					if (m_Score > 5500)
+						m_plat[i].m_type = (int)PlatformType::SNOW;
+
 					uniform_real_distribution<float> randomPosX(-0.6f, 0.3f);
 					m_plat[i].m_x = randomPosX(RandomNumberGenerator);
 
@@ -298,7 +322,7 @@ void Game::UpdateGameComponents()
 								(m_plat[i].m_y < m_plat[j].m_y + 0.2f))
 							{
 								m_plat[i].m_x = randomPosX(RandomNumberGenerator);
-								m_plat[i].m_y = 0.48f;
+								m_plat[i].m_y = 0.47f;
 								j += 1;
 							}
 						}
@@ -320,7 +344,9 @@ void Game::UpdateGameComponents()
 					m_AudioManager->playSound(m_JumpSound, 0, false, &m_FmodChannel);
 
 				dy = 0.023f;
-				m_plat[i].m_x = 2.0f;
+
+				if (m_plat[i].m_type == (int)PlatformType::SNOW)
+					m_plat[i].m_x = 2.0f;
 			}
 		}
 
@@ -345,7 +371,38 @@ void Game::RenderBackground()
 {
 	m_SimpleShader.UseProgram();
 	m_SimpleShader.UpdateTransform(m_BackgroundTransformation, m_Camera);
-	m_texBackground.BindTexture(0);
+	
+	if (m_Score > 5000 && m_Score < 5500)
+	{
+		if (!m_bDoOnce[0])
+		{
+			m_bDoOnce[0] = true;
+			m_mainThemeOne->release();
+			m_AudioManager->playSound(m_quake, 0, false, &m_FmodChannel);
+			m_quake->setMode(FMOD_LOOP_NORMAL);
+			m_quake->setLoopCount(20);
+			m_FmodChannel->setVolume(0.05f);
+		}
+
+		if (m_BackgroundTransformation.GetPos().x < -0.8f)
+			m_bShake = true;
+		else if (m_BackgroundTransformation.GetPos().x > -0.7f)
+			m_bShake = false;
+
+		if (m_bShake)
+			m_BackgroundTransformation.GetPos().x += 0.07f;
+		else
+			m_BackgroundTransformation.GetPos().x -= 0.07f;
+	}
+
+	if (m_Score > 5500 && m_Score < 5600)
+		m_quake->release();
+
+	if (m_Score >= 5500)
+		m_texBackground[1].BindTexture(0); // winter background 
+	else
+		m_texBackground[0].BindTexture(0);
+
 	m_Background.Draw();
 }
 
@@ -360,9 +417,13 @@ void Game::RenderPlatforms()
 
 	for (unsigned int i = 0; i < m_NumOfPlatforms; ++i)
 	{
-		
 		m_SimpleShader.UpdateTransform(m_PlatformTransformation, m_Camera);
-		m_texPlatform.BindTexture(0);
+
+		if (m_plat[i].m_type == (int)PlatformType::CONCRETE)
+			m_texPlatform.BindTexture(0);
+		else 
+			m_texSnow.BindTexture(0);
+
 		m_Platform.Draw();
 
 		m_PlatformTransformation.GetPos().x = m_plat[i].m_x;
@@ -395,7 +456,12 @@ void Game::RenderEnemy()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	m_SimpleShader.UpdateTransform(m_enemyTransformation, m_Camera);
-	m_texEnemy.BindTexture(0);
+
+	if (m_Score < 5200)
+		m_texEnemy[0].BindTexture(0); // Regular enemy
+	else
+		m_texEnemy[1].BindTexture(0); // Snowy enemy 
+
 	m_enemy.Draw();
 	glDisable(GL_BLEND);
 }
@@ -434,13 +500,10 @@ bool Game::InitFmod()
 	FMOD_RESULT _result;
 
 	_result = FMOD::System_Create(&m_AudioManager);
-	if (_result != FMOD_OK)
-		return false;
+	assert(_result == FMOD_OK);
 
 	_result = m_AudioManager->init(50, FMOD_INIT_NORMAL, 0);
-
-	if (_result != FMOD_OK)
-		return false;
+	assert(_result == FMOD_OK);
 
 	return true;
 }
@@ -453,6 +516,17 @@ bool Game::LoadAudio()
 {
 	FMOD_RESULT _result;
 	_result = m_AudioManager->createSound("Assets//Audio//jump.mp3", FMOD_DEFAULT, 0, &m_JumpSound);
+	assert(_result == FMOD_OK);
+
+	_result = m_AudioManager->createSound("Assets//Audio//WinterIsHere.mp3", FMOD_DEFAULT, 0, &m_winterTheme);
+	assert(_result == FMOD_OK);
+
+	_result = m_AudioManager->createSound("Assets//Audio//MainThemeOne.mp3", FMOD_DEFAULT, 0, &m_mainThemeOne);
+	assert(_result == FMOD_OK);
+
+	_result = m_AudioManager->createSound("Assets//Audio//WorldRumble.mp3", FMOD_DEFAULT, 0, &m_quake);
+	assert(_result == FMOD_OK);
+
 	return true;
 }
 
@@ -479,39 +553,41 @@ void Game::RestartGame()
 
 	m_NumOfPlatforms = 7;
 	m_Score = 0;
+	m_enemySpeed = 0.007f;
 
+	m_quake->release();
+	m_mainThemeOne->release();
+	m_JumpSound->release();
+	m_winterTheme->release();
+
+	m_enemyTransformation.GetPos().y = 0.0f;
 	m_PlayerTransformation.GetPos().x = 0.0f;
 	m_PlayerTransformation.GetPos().y = -0.30f;
 
 	m_plat[0].m_x = m_PlayerTransformation.GetPos().x;
 	m_plat[0].m_y = -0.40f;
 
-	for (unsigned int i = 1; i < m_NumOfPlatforms; ++i)
+	UpdateEnemySpawnRate();
+
+	for (unsigned int i = 0; i < m_NumOfPlatforms; ++i)
 	{
+		m_plat[i].m_type = (int)PlatformType::CONCRETE;
 		uniform_real_distribution<float> randomPosX(-0.6f, 0.3f);
 		uniform_real_distribution<float> randomPosY(-0.5f, 0.4f);
 		m_plat[i].m_x = randomPosX(RandomNumberGenerator);
 		m_plat[i].m_y = randomPosY(RandomNumberGenerator);
 	}
 
+	m_bDoOnce[0] = false;
+	m_bDoOnce[1] = false;
+	LoadAudio();
+
+	m_AudioManager->playSound(m_mainThemeOne, 0, false, &m_FmodChannel);
+	m_mainThemeOne->setMode(FMOD_LOOP_NORMAL);
+	m_mainThemeOne->setLoopCount(20);
+	m_FmodChannel->setVolume(0.07f);
+
 	m_isGameover = false;
-}
-
-
-// -------------------
-// Author: Rony Hanna
-// Description: Function that checks the player's current score and adjust the numbers of platforms  
-// -------------------
-void Game::UpdatePlatforms()
-{
-	if (m_Score > 3000 && m_Score < 4000)
-		m_NumOfPlatforms = 7;
-	else if (m_Score > 4000 && m_Score < 6000)
-		m_NumOfPlatforms = 6;
-	else if (m_Score > 6000 && m_Score < 8000)
-		m_NumOfPlatforms = 5;
-	else if (m_Score > 8000)
-		m_NumOfPlatforms = 4;
 }
 
 // -------------------
@@ -521,15 +597,15 @@ void Game::UpdatePlatforms()
 void Game::UpdateEnemySpawnRate()
 {
 	if (m_Score > 3000 && m_Score < 4000)
-		m_enemyTransformation.GetPos().y += 10.0f;
-	else if (m_Score > 4000 && m_Score < 6000)
 		m_enemyTransformation.GetPos().y += 7.0f;
-	else if (m_Score > 6000 && m_Score < 8000)
+	else if (m_Score > 4000 && m_Score < 6000)
 		m_enemyTransformation.GetPos().y += 5.0f;
+	else if (m_Score > 6000 && m_Score < 8000)
+		m_enemyTransformation.GetPos().y += 4.0f;
 	else if (m_Score > 8000)
-		m_enemyTransformation.GetPos().y += 3.0f;
+		m_enemyTransformation.GetPos().y += 2.0f;
 	else
-		m_enemyTransformation.GetPos().y += 12.0f;
+		m_enemyTransformation.GetPos().y += 9.0f;
 }
 
 // -------------------
@@ -540,13 +616,19 @@ void Game::Run()
 {
 	InitSDL();
 
+	// Create shader program 
 	m_SimpleShader.SetProgram(m_SimpleShader.CreateProgram("Assets/Shaders/VertexShader.vs", "Assets/Shaders/FragmentShader.fs"));
+
+	// Load texture files 
 	m_texPlayer.InitTexture("Assets//Textures//Slime.png");
-	m_texEnemy.InitTexture("Assets//Textures//EnemySlime.png");
+	m_texEnemy[0].InitTexture("Assets//Textures//EnemySlime.png");
+	m_texEnemy[1].InitTexture("Assets//Textures//EnemySlimeSnow.png");
 	m_texProjectile.InitTexture("Assets//Textures//Projectile.png");
-	m_texBackground.InitTexture("Assets//Textures//Background.png");
+	m_texBackground[0].InitTexture("Assets//Textures//Background.png");
+	m_texBackground[1].InitTexture("Assets//Textures//winter.png");
 	m_texPlatform.InitTexture("Assets//Textures//grass.png");
 	m_texGameoverScene.InitTexture("Assets//Textures//Gameover.png");
+	m_texSnow.InitTexture("Assets//Textures//snow.png");
 
 	shapes.CreateTexturedQuad();
 	m_Player.InitGeometry(shapes.m_TexturedQuad, sizeof(shapes.m_TexturedQuad) / sizeof(shapes.m_TexturedQuad[0]), QuadIndices, sizeof(QuadIndices) / sizeof(QuadIndices[0]));
@@ -591,5 +673,10 @@ void Game::Run()
 	if (!InitFmod() || !LoadAudio())
 		std::cout << "WARNING: Unable to load audio files.";
 
+	m_AudioManager->playSound(m_mainThemeOne, 0, false, &m_FmodChannel);
+	m_mainThemeOne->setMode(FMOD_LOOP_NORMAL);
+	m_mainThemeOne->setLoopCount(20);
+	m_FmodChannel->setVolume(0.07f);
+	
 	GameLoop();
 }
