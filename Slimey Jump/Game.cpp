@@ -18,7 +18,7 @@ Game::Game()
 {
 	m_enemySpeed = 0.007f;
 	m_StartingTick = 0;
-	GameState = State::PLAY;
+	GameState = State::MAIN_MENU;
 }
 
 // -------------------
@@ -166,6 +166,18 @@ void Game::ProcessInput()
 				}
 				break;
 			}
+			if (_event.key.keysym.sym == SDLK_RETURN)
+			{
+				if (m_bWin)
+					m_bWin = false;
+				else
+				{
+					RestartGame();
+					GameState = State::PLAY;
+				}
+					
+				break;
+			}
 
 			// Check if the game is over and if the 'R' key was pressed 
 			if (_event.key.keysym.sym == SDLK_r && m_isGameover)
@@ -185,7 +197,7 @@ void Game::Render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	if (!m_isGameover)
+	if (!m_isGameover && GameState == State::PLAY)
 	{
 		RenderBackground();
 		RenderPlatforms();
@@ -197,6 +209,13 @@ void Game::Render()
 			RenderProjectile();
 
 		m_Text->Render();
+	}
+	else if (GameState == State::MAIN_MENU)
+	{
+		if (m_bWin)
+			RenderVictoryScreen();
+		else
+			RenderMainMenu();
 	}
 	else
 		RenderGameOverScene();
@@ -210,7 +229,7 @@ void Game::Render()
 // -------------------
 void Game::UpdateGameComponents()
 {
-	if (!m_isGameover)
+	if (!m_isGameover && GameState == State::PLAY)
 	{
 		dy -= 0.0005f;
 		m_PlayerTransformation.GetPos().y += dy;
@@ -244,8 +263,8 @@ void Game::UpdateGameComponents()
 			}
 
 			// Check for collision between player's projectile and enemy 
-			if (m_projectileTransformation.GetPos().x + 0.05f > m_enemyTransformation.GetPos().x &&
-				m_projectileTransformation.GetPos().x < m_enemyTransformation.GetPos().x + 0.05f &&
+			if (m_projectileTransformation.GetPos().x + 0.075f > m_enemyTransformation.GetPos().x &&
+				m_projectileTransformation.GetPos().x < m_enemyTransformation.GetPos().x + 0.075f &&
 				m_projectileTransformation.GetPos().y + 0.06f > m_enemyTransformation.GetPos().y &&
 				m_projectileTransformation.GetPos().y < m_enemyTransformation.GetPos().y + 0.06f)
 			{
@@ -279,6 +298,13 @@ void Game::UpdateGameComponents()
 				m_winterTheme->setLoopCount(20);
 				m_FmodChannel->setVolume(0.07f);
 			}
+		}
+
+		// Check if player has one 
+		if (m_Score >= 10000)
+		{
+			m_bWin = true;
+			GameState = State::MAIN_MENU;
 		}
 
 		// Check if player has fallen 
@@ -365,6 +391,18 @@ void Game::UpdateGameComponents()
 
 // -------------------
 // Author: Rony Hanna
+// Description: Function that renders the main menu
+// -------------------
+void Game::RenderMainMenu()
+{
+	m_SimpleShader.UseProgram();
+	m_SimpleShader.UpdateTransform(m_mainMenuTransformation, m_Camera);
+	m_texMainMenu.BindTexture(0);
+	m_Background.Draw();
+}
+
+// -------------------
+// Author: Rony Hanna
 // Description: Function that renders the background 
 // -------------------
 void Game::RenderBackground()
@@ -403,6 +441,19 @@ void Game::RenderBackground()
 	else
 		m_texBackground[0].BindTexture(0);
 
+	m_Background.Draw();
+}
+
+// -------------------
+// Author: Rony Hanna
+// Description: Function that renders the victory screen
+// -------------------
+void Game::RenderVictoryScreen()
+{
+	m_BackgroundTransformation.GetPos().x = -0.85f;
+	m_SimpleShader.UseProgram();
+	m_SimpleShader.UpdateTransform(m_BackgroundTransformation, m_Camera);
+	m_texVictoryMenu.BindTexture(0);
 	m_Background.Draw();
 }
 
@@ -549,6 +600,7 @@ void Game::RenderGameOverScene()
 // -------------------
 void Game::RestartGame()
 {
+	GameState = State::PLAY;
 	dy = 0.023f;
 
 	m_NumOfPlatforms = 7;
@@ -620,6 +672,7 @@ void Game::Run()
 	m_SimpleShader.SetProgram(m_SimpleShader.CreateProgram("Assets/Shaders/VertexShader.vs", "Assets/Shaders/FragmentShader.fs"));
 
 	// Load texture files 
+	m_texVictoryMenu.InitTexture("Assets//Textures//VictoryScreen.png"); 
 	m_texPlayer.InitTexture("Assets//Textures//Slime.png");
 	m_texEnemy[0].InitTexture("Assets//Textures//EnemySlime.png");
 	m_texEnemy[1].InitTexture("Assets//Textures//EnemySlimeSnow.png");
@@ -628,7 +681,8 @@ void Game::Run()
 	m_texBackground[1].InitTexture("Assets//Textures//winter.png");
 	m_texPlatform.InitTexture("Assets//Textures//grass.png");
 	m_texGameoverScene.InitTexture("Assets//Textures//Gameover.png");
-	m_texSnow.InitTexture("Assets//Textures//snow.png");
+	m_texSnow.InitTexture("Assets//Textures//Snow.png");
+	m_texMainMenu.InitTexture("Assets//Textures//MainMenu.png");
 
 	shapes.CreateTexturedQuad();
 	m_Player.InitGeometry(shapes.m_TexturedQuad, sizeof(shapes.m_TexturedQuad) / sizeof(shapes.m_TexturedQuad[0]), QuadIndices, sizeof(QuadIndices) / sizeof(QuadIndices[0]));
@@ -652,6 +706,10 @@ void Game::Run()
 	m_BackgroundTransformation.GetScale().x = 9.0f;
 	m_BackgroundTransformation.GetScale().y = 5.0f;
 
+	m_mainMenuTransformation.GetPos().x = -0.67f;
+	m_mainMenuTransformation.GetScale().x = 6.7f;
+	m_mainMenuTransformation.GetScale().y = 5.0f;
+
 	m_Camera.initCamera(vec3(0.0f, 0.0f, 1.0f), 70.0f, (float)WIDTH / (float)HEIGHT, 0.01f, 100.0f);
 
 	for (unsigned int i = 0; i < m_NumOfPlatforms; ++i)
@@ -666,6 +724,7 @@ void Game::Run()
 
 	m_Text = new Text(" ", "Assets//Fonts//Engcomica.ttf");
 	m_Text->SetScale(1.0f);
+	 
 	m_Text->SetPosition(glm::vec2(35.0f, 550.0f));
 	m_Text->SetColor(glm::vec3(1.0f, 0.3f, 0.0f));
 	m_Text->SetText(score);

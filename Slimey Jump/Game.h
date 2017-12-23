@@ -24,7 +24,7 @@ using std::cout;
 using std::uniform_real_distribution;
 using std::uniform_int_distribution;
 
-enum class State { PLAY, GAME_OVER, EXIT, TOTAL_STATES };
+enum class State { PLAY, MAIN_MENU, GAME_OVER, EXIT, TOTAL_STATES };
 enum class PlatformType { CONCRETE, SNOW, TOTAL_PLATFORM_TYPES };
 
 struct PlatformPos
@@ -52,7 +52,9 @@ private:
 	void ProcessInput();
 	void UpdateGameComponents();
 	void Render();
+	void RenderMainMenu();
 	void RenderBackground();
+	void RenderVictoryScreen();
 	void RenderPlatforms();
 	void RenderPlayer();
 	void RenderEnemy();
@@ -69,9 +71,9 @@ private:
 	Shapes shapes;
 	Shader m_SimpleShader;
 	Mesh m_Player, m_enemy, m_projectile, m_Background, m_Platform;
-	Texture m_texPlayer, m_texEnemy[2], m_texSnow, m_texProjectile, m_texBackground[2], m_texPlatform, m_texGameoverScene;
+	Texture m_texPlayer, m_texMainMenu, m_texVictoryMenu, m_texEnemy[2], m_texSnow, m_texProjectile, m_texBackground[2], m_texPlatform, m_texGameoverScene;
 	Camera m_Camera;
-	MatrixTransform m_PlayerTransformation, m_enemyTransformation, m_projectileTransformation, m_BackgroundTransformation, m_PlatformTransformation;
+	MatrixTransform m_PlayerTransformation, m_enemyTransformation, m_projectileTransformation, m_BackgroundTransformation, m_PlatformTransformation, m_mainMenuTransformation;
 	PlatformPos m_plat[16];
 	Text* m_Text = nullptr;
 
@@ -96,6 +98,7 @@ private:
 	bool m_bShake = false;
 	bool m_AlternateScreenMode = false;
 	bool m_bDoOnce[2] = { false, false };
+	bool m_bWin = false;
 };
 
 #endif // !__GAME_H__

@@ -58,8 +58,8 @@ void Shapes::CreateTexturedQuad()
 	m_TexturedQuad[2].colors = { 1.0f, 0.0f, 1.0f };
 	m_TexturedQuad[3].colors = { 0.0f, 1.0f, 1.0f };
 
-	m_TexturedQuad[0].texture = { 0.0f, 1.0f };
-	m_TexturedQuad[1].texture = { 1.0f, 1.0f };
-	m_TexturedQuad[2].texture = { 1.0f, 0.0f };
-	m_TexturedQuad[3].texture = { 0.0f, 0.0f };
+	m_TexturedQuad[0].texture = { 0.0f, 0.0f };
+	m_TexturedQuad[1].texture = { 1.0f, 0.0f };
+	m_TexturedQuad[2].texture = { 1.0f, 1.0f };
+	m_TexturedQuad[3].texture = { 0.0f, 1.0f };
 }

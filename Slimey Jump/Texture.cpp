@@ -25,7 +25,7 @@ Texture::~Texture()
 void Texture::InitTexture(const std::string& path)
 {
 	unsigned char* pTextureImage = SOIL_load_image(path.c_str(), &m_Width, &m_Height, 0, SOIL_LOAD_RGBA);
-
+	 
 	if (pTextureImage == nullptr)
 		std::cerr << "ERROR: Error while loading texture image.\n";
 	
