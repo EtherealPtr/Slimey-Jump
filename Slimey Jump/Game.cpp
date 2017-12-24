@@ -8,6 +8,7 @@
 
 #define FPS 60
 
+// Seed random number generator 
 std::mt19937 RandomNumberGenerator(time(NULL));
 
 // -------------------
@@ -630,8 +631,7 @@ void Game::RestartGame()
 		m_plat[i].m_y = randomPosY(RandomNumberGenerator);
 	}
 
-	m_bDoOnce[0] = false;
-	m_bDoOnce[1] = false;
+	m_bDoOnce[0] = false; m_bDoOnce[1] = false;
 	LoadAudio();
 
 	m_AudioManager->playSound(m_mainThemeOne, 0, false, &m_FmodChannel);
@@ -648,16 +648,19 @@ void Game::RestartGame()
 // -------------------
 void Game::UpdateEnemySpawnRate()
 {
-	if (m_Score > 3000 && m_Score < 4000)
-		m_enemyTransformation.GetPos().y += 7.0f;
-	else if (m_Score > 4000 && m_Score < 6000)
-		m_enemyTransformation.GetPos().y += 5.0f;
-	else if (m_Score > 6000 && m_Score < 8000)
-		m_enemyTransformation.GetPos().y += 4.0f;
-	else if (m_Score > 8000)
-		m_enemyTransformation.GetPos().y += 2.0f;
+	uniform_real_distribution<float> randomPosY(2.0f, 9.0f);
+	float enemyLoc = randomPosY(RandomNumberGenerator);
+
+	if (m_Score > 2000 && m_Score < 3000)
+		m_enemyTransformation.GetPos().y += enemyLoc - 1.0f;
+	else if (m_Score > 3000 && m_Score < 4000)
+		m_enemyTransformation.GetPos().y += enemyLoc - 2.0f;
+	else if (m_Score > 4000 && m_Score < 5000)
+		m_enemyTransformation.GetPos().y += enemyLoc - 2.5f;
+	else if (m_Score > 5000)
+		m_enemyTransformation.GetPos().y += enemyLoc - 3.0f;
 	else
-		m_enemyTransformation.GetPos().y += 9.0f;
+		m_enemyTransformation.GetPos().y += enemyLoc;
 }
 
 // -------------------
