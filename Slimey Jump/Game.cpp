@@ -5,6 +5,8 @@
 
 #include "Game.h"
 #include "Indices.h"
+#include <chrono>
+#include <ctime>
 
 #define FPS 60
 
@@ -31,6 +33,7 @@ Game::~Game()
 	delete m_Text;
 	m_Text = nullptr;
 
+	m_growl->release();
 	m_mainThemeOne->release();
 	m_quake->release();
 	m_JumpSound->release();
@@ -51,7 +54,7 @@ int Game::InitSDL()
 		return -1;
 	}
 
-	m_MainWindow = SDL_CreateWindow("Slimey Jump - The Fearless Hobbit 2D Engine (c) Rony Hanna", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_OPENGL);
+	m_MainWindow = SDL_CreateWindow("Slimey Jump - Rony's 2D Game Engine", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_OPENGL);
 
 	if (m_MainWindow == nullptr)
 	{
@@ -145,8 +148,10 @@ void Game::ProcessInput()
 			}
 			if (_event.key.keysym.sym == SDLK_w)
 			{
-				if (!m_bShooting)
+				if (!m_bShooting && GameState == State::PLAY)
 				{
+					m_AudioManager->playSound(m_fire, 0, false, &m_FmodChannel);
+					m_FmodChannel->setVolume(0.5f);
 					m_projectileTransformation.GetPos().x = m_PlayerTransformation.GetPos().x + 0.04f;
 					m_projectileTransformation.GetPos().y = m_PlayerTransformation.GetPos().y;
 					m_bShooting = true;
@@ -288,6 +293,24 @@ void Game::UpdateGameComponents()
 			}
 		}
 
+		// Check the distance between the player and the enemy, if the player is close, play a growling sound so that the player is made aware of the enemy
+		if (m_enemyTransformation.GetPos().y - m_PlayerTransformation.GetPos().y >= 1.5f && 
+			m_enemyTransformation.GetPos().y - m_PlayerTransformation.GetPos().y <= 1.7f)
+		{
+			if (m_activateGrowlingSound >= 300)
+			{
+				m_activateGrowlingSound = 0;
+				m_bDoOnce[3] = false;
+			}
+
+			if (!m_bDoOnce[3])
+			{
+				m_AudioManager->playSound(m_growl, 0, false, &m_FmodChannel);
+				m_FmodChannel->setVolume(0.5f);
+				m_bDoOnce[3] = true;
+			}
+		}
+
 		// Update music
 		if (m_Score >= 5900)
 		{
@@ -331,6 +354,7 @@ void Game::UpdateGameComponents()
 				if (m_plat[i].m_y < -0.5f)
 				{
 					m_Score += 60;
+					m_activateGrowlingSound += 60;
 					m_plat[i].m_y = 0.47f;
 
 					if (m_Score > 5500)
@@ -579,6 +603,12 @@ bool Game::LoadAudio()
 	_result = m_AudioManager->createSound("Assets//Audio//WorldRumble.mp3", FMOD_DEFAULT, 0, &m_quake);
 	assert(_result == FMOD_OK);
 
+	_result = m_AudioManager->createSound("Assets//Audio//MonsterGrowl.mp3", FMOD_DEFAULT, 0, &m_growl);
+	assert(_result == FMOD_OK);
+
+	_result = m_AudioManager->createSound("Assets//Audio//Projectile.flac", FMOD_DEFAULT, 0, &m_fire);
+	assert(_result == FMOD_OK);
+	
 	return true;
 }
 
@@ -608,6 +638,7 @@ void Game::RestartGame()
 	m_Score = 0;
 	m_enemySpeed = 0.007f;
 
+	m_growl->release();
 	m_quake->release();
 	m_mainThemeOne->release();
 	m_JumpSound->release();
@@ -648,7 +679,7 @@ void Game::RestartGame()
 // -------------------
 void Game::UpdateEnemySpawnRate()
 {
-	uniform_real_distribution<float> randomPosY(2.0f, 9.0f);
+	uniform_real_distribution<float> randomPosY(5.0f, 14.0f);
 	float enemyLoc = randomPosY(RandomNumberGenerator);
 
 	if (m_Score > 2000 && m_Score < 3000)
@@ -658,7 +689,7 @@ void Game::UpdateEnemySpawnRate()
 	else if (m_Score > 4000 && m_Score < 5000)
 		m_enemyTransformation.GetPos().y += enemyLoc - 2.5f;
 	else if (m_Score > 5000)
-		m_enemyTransformation.GetPos().y += enemyLoc - 3.0f;
+		m_enemyTransformation.GetPos().y += enemyLoc - 3.5f;
 	else
 		m_enemyTransformation.GetPos().y += enemyLoc;
 }

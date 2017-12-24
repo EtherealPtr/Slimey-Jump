@@ -78,11 +78,11 @@ private:
 	Text* m_Text = nullptr;
 
 	FMOD::System* m_AudioManager;
-	FMOD::Sound* m_JumpSound, *m_mainThemeOne, *m_winterTheme, *m_quake;
+	FMOD::Sound* m_JumpSound, *m_mainThemeOne, *m_winterTheme, *m_quake, *m_growl, *m_fire;
 	FMOD::Channel* m_FmodChannel;
 
-	unsigned short int m_Score;
-	unsigned short int m_NumOfPlatforms = 8;
+	unsigned short int m_Score, m_NumOfPlatforms = 8;
+	unsigned short int m_activateGrowlingSound = 0;
 	float m_enemySpeed;
 	double m_playerVelocity;
 	float dx = 0.0f, dy = 0.0f;
@@ -97,7 +97,7 @@ private:
 	bool m_bShooting = false;
 	bool m_bShake = false;
 	bool m_AlternateScreenMode = false;
-	bool m_bDoOnce[2] = { false, false };
+	bool m_bDoOnce[3] = { false, false, false };
 	bool m_bWin = false;
 };
 
