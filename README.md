@@ -10,7 +10,7 @@ External dependencies used:
 - __Simple OpenGL Image Loader (SOIL)__: Used for loading texture images   
 
 # About The Game
-Slimey Jump is a platforming video game where the player has to guide a slime up a never-ending series of platforms without falling. 
+A simple platforming game where the player has to guide a slime up a series of platforms without falling or colliding with an enemy.
 
 ![alt text](http://i65.tinypic.com/1zce0rb.png)
 
@@ -18,12 +18,7 @@ Slimey Jump is a platforming video game where the player has to guide a slime up
 Press the 'A' key to move left  
 Press the 'D' Key to move right  
 Press the 'H' key to use fullscreen mode
+Press the space key to fire
 
-# Notes
-The game is still very basic and gets pretty boring really fast, I will be adding enemies for the player to shoot at along with various 
-different objects the player can acquire during the game (such as propeller hats and jetpacks) to move faster.   
 
-You may play the game by navigating to the debug folder and double clicking the Slimey Jump.exe file.  
-If you would rather run the game using VS then simply run the .sln file instead.   
- 
 Created by Rony Hanna July 10, 2017.
