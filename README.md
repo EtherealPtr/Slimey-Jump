@@ -18,7 +18,7 @@ A simple platforming game where the player has to guide a slime up a series of p
 Press the 'A' key to move left  
 Press the 'D' Key to move right  
 Press the 'H' key to use fullscreen mode
-Press the space key to fire
+Press the 'W' key to fire
 
 
 Created by Rony Hanna July 10, 2017.
