@@ -174,13 +174,8 @@ void Game::ProcessInput()
 			}
 			if (_event.key.keysym.sym == SDLK_RETURN)
 			{
-				if (m_bWin)
-					m_bWin = false;
-				else
-				{
-					RestartGame();
-					GameState = State::PLAY;
-				}
+				RestartGame();
+				GameState = State::PLAY;
 					
 				break;
 			}
@@ -355,7 +350,7 @@ void Game::UpdateGameComponents()
 				{
 					m_Score += 60;
 					m_activateGrowlingSound += 60;
-					m_plat[i].m_y = 0.47f;
+					m_plat[i].m_y = 0.46f;
 
 					if (m_Score > 5500)
 						m_plat[i].m_type = (int)PlatformType::SNOW;
@@ -633,6 +628,7 @@ void Game::RestartGame()
 {
 	GameState = State::PLAY;
 	dy = 0.023f;
+	m_bWin = false;
 
 	m_NumOfPlatforms = 7;
 	m_Score = 0;
