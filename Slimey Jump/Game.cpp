@@ -174,8 +174,13 @@ void Game::ProcessInput()
 			}
 			if (_event.key.keysym.sym == SDLK_RETURN)
 			{
-				RestartGame();
-				GameState = State::PLAY;
+				if (m_bWin)
+					m_bWin = false;
+				else
+				{
+					RestartGame();
+					GameState = State::PLAY;
+				}
 					
 				break;
 			}
@@ -288,7 +293,7 @@ void Game::UpdateGameComponents()
 			}
 		}
 
-		// Check the distance between the player and the enemy, if the player is close, play a growling sound so that the player is made aware of the enemy
+		// Check the distance between the player and the enemy, if the player is close, play a growling sound so that the player is made aware that an enemy is nearby
 		if (m_enemyTransformation.GetPos().y - m_PlayerTransformation.GetPos().y >= 1.5f && 
 			m_enemyTransformation.GetPos().y - m_PlayerTransformation.GetPos().y <= 1.7f)
 		{

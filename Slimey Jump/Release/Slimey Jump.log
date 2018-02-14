@@ -1,0 +1,13 @@
+﻿  Game.cpp
+Game.cpp(14): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+Game.cpp(406): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+Game.cpp(409): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+  SOIL.lib(SOIL.obj) : MSIL .netmodule or module compiled with /GL found; restarting link with /LTCG; add /LTCG to the link command line to improve linker performance
+  Generating code
+  Finished generating code
+SOIL.lib(SOIL.obj) : warning LNK4099: PDB 'vc120.pdb' was not found with 'SOIL.lib(SOIL.obj)' or at 'C:\Users\Rony Hanna\Desktop\Slimey-Jump--Rony-Hanna\Release\vc120.pdb'; linking object as if no debug info
+SOIL.lib(stb_image_aug.obj) : warning LNK4099: PDB 'vc120.pdb' was not found with 'SOIL.lib(stb_image_aug.obj)' or at 'C:\Users\Rony Hanna\Desktop\Slimey-Jump--Rony-Hanna\Release\vc120.pdb'; linking object as if no debug info
+SOIL.lib(image_helper.obj) : warning LNK4099: PDB 'vc120.pdb' was not found with 'SOIL.lib(image_helper.obj)' or at 'C:\Users\Rony Hanna\Desktop\Slimey-Jump--Rony-Hanna\Release\vc120.pdb'; linking object as if no debug info
+SOIL.lib(image_DXT.obj) : warning LNK4099: PDB 'vc120.pdb' was not found with 'SOIL.lib(image_DXT.obj)' or at 'C:\Users\Rony Hanna\Desktop\Slimey-Jump--Rony-Hanna\Release\vc120.pdb'; linking object as if no debug info
+  Slimey Jump.vcxproj -> C:\Users\Rony Hanna\Desktop\Slimey-Jump--Rony-Hanna\Release\Slimey Jump.exe
+  Slimey Jump.vcxproj -> C:\Users\Rony Hanna\Desktop\Slimey-Jump--Rony-Hanna\Release\Slimey Jump.pdb (Full PDB)
