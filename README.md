@@ -3,7 +3,7 @@ A simple 2D Doodle Jump clone created with my own 2D engine using SDL and OpenGL
 
 External dependencies used:  
 - __Simple DirectMedia Layer (SDL)__: Used to establish OpenGL context  
-- __OpenGL Extension Wrangler Library (glew)__  
+- __OpenGL Extension Wrangler Library (glew)__: Used for querying and loading OpenGL extensions
 - __Freetype__: Used for text rendering  
 - __OpenGL Mathematics__: Math header library  
 - __FMOD__: Used for game audio  
