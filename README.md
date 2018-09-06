@@ -1,24 +1,19 @@
-# Slimey Jump - Rony Hanna 
-A simple 2D Doodle Jump clone created with my own 2D engine using SDL and OpenGL. 
+# Slimey Jump
+A 2D game similar to Doodle Jump written in C++ and modern OpenGL. The player has to guide a slime up a series of platforms without falling or colliding with an enemy.
+
+![alt text](http://i65.tinypic.com/1zce0rb.png)
 
 External dependencies used:  
-- __Simple DirectMedia Layer (SDL)__: Used to establish OpenGL context  
+- __Simple DirectMedia Layer (SDL)__: Used to establish OpenGL context and cross platform windowing 
 - __OpenGL Extension Wrangler Library (glew)__: Used for querying and loading OpenGL extensions
-- __Freetype__: Used for text rendering  
+- __Freetype__: Used for rendering text
 - __OpenGL Mathematics__: Math header library  
 - __FMOD__: Used for game audio  
 - __Simple OpenGL Image Loader (SOIL)__: Used for loading texture images   
 
-# About The Game
-A simple platforming game where the player has to guide a slime up a series of platforms without falling or colliding with an enemy.
-
-![alt text](http://i65.tinypic.com/1zce0rb.png)
-
 # Game Controls
-Press the 'A' key to move left  
-Press the 'D' Key to move right  
-Press the 'H' key to use fullscreen mode  
-Press the 'W' key to fire
+Move with A and D keys  
+Press 'H' to toggle fullscreen mode  
+Fire with 'W' key  
 
-
-Created by Rony Hanna July 10, 2017.
+Created by Rony Hanna July 10, 2017 (personal project).
